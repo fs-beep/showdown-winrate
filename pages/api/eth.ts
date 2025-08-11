@@ -121,25 +121,43 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
     const logs = Array.from(uniq.values());
 
-    const rows = logs.map((log: any) => {
-      try {
-        const parsed = iface.parseLog({ topics: log.topics, data: log.data });
-        const [gameNumber, gameId, startedAt, winningPlayer, winningClasses, losingPlayer, losingClasses, gameLength, endReason] = parsed.args as any[];
-        return {
-          blockNumber: parseInt(log.blockNumber, 16),
-          txHash: log.transactionHash,
-          gameNumber: Number(gameNumber?.toString?.() ?? gameNumber),
-          gameId: String(gameId),
-          startedAt: String(startedAt),
-          winningPlayer: String(winningPlayer),
-          winningClasses: String(winningClasses),
-          losingPlayer: String(losingPlayer),
-          losingClasses: String(losingClasses),
-          gameLength: String(gameLength),
-          endReason: String(endReason),
-        };
-      } catch { return null; }
-    }).filter(Boolean);
+const rows = logs
+  .map((log: any) => {
+    try {
+      const parsed = iface.parseLog({ topics: log.topics, data: log.data });
+      if (!parsed) return null; // <-- fixes “parsed is possibly null” under strict TS
+
+      const [
+        gameNumber,
+        gameId,
+        startedAt,
+        winningPlayer,
+        winningClasses,
+        losingPlayer,
+        losingClasses,
+        gameLength,
+        endReason,
+      ] = (parsed as any).args as any[];
+
+      return {
+        blockNumber: parseInt(log.blockNumber, 16),
+        txHash: log.transactionHash,
+        gameNumber: Number(gameNumber?.toString?.() ?? gameNumber),
+        gameId: String(gameId),
+        startedAt: String(startedAt),
+        winningPlayer: String(winningPlayer),
+        winningClasses: String(winningClasses),
+        losingPlayer: String(losingPlayer),
+        losingClasses: String(losingClasses),
+        gameLength: String(gameLength),
+        endReason: String(endReason),
+      };
+    } catch {
+      return null;
+    }
+  })
+  .filter(Boolean) as any[];
+
 
     res.status(200).json({ ok: true, rows });
   } catch (e:any) {
