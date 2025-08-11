@@ -1,0 +1,6 @@
+{
+  "functions": {
+    "api/**/*.js": { "runtime": "nodejs18.x" },
+    "api/**/*.mjs": { "runtime": "nodejs18.x" }
+  }
+}
